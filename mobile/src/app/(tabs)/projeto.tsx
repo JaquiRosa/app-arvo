@@ -3,7 +3,7 @@ import { ComingSoon, Screen } from '@/components/screen';
 
 export default function ProjectScreen() {
   return (
-    <Screen eyebrow="Reflorestar" title="Meu projeto" header={<PropertyPicker />}>
+    <Screen eyebrow="Reflorestar" title="Meu projeto" header={<PropertyPicker />} overlap={false}>
       <ComingSoon
         title="Etapas do projeto"
         description="Elaboração, implantação e monitoramento, com o que já foi feito."

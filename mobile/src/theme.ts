@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // Identidade visual da Arvo: verde-floresta do logo, creme de fundo, terra/marrom e o verde vivo do painel MVGI.
 export const colors = {
   forest: '#395237',
@@ -19,11 +21,14 @@ export const colors = {
   dangerSoft: '#f8e1de',
 } as const;
 
+// No navegador, se a Montserrat não carregar, cai numa fonte sem serifa em vez da serifada padrão.
+const withFallback = (name: string) => (Platform.OS === 'web' ? `${name}, system-ui, "Segoe UI", Roboto, Arial, sans-serif` : name);
+
 export const fonts = {
-  regular: 'Montserrat_400Regular',
-  medium: 'Montserrat_500Medium',
-  semibold: 'Montserrat_600SemiBold',
-  bold: 'Montserrat_700Bold',
+  regular: withFallback('Montserrat_400Regular'),
+  medium: withFallback('Montserrat_500Medium'),
+  semibold: withFallback('Montserrat_600SemiBold'),
+  bold: withFallback('Montserrat_700Bold'),
 } as const;
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;

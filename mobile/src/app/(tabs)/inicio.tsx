@@ -93,8 +93,8 @@ export default function HomeScreen() {
 
       <Text style={textStyles.section}>Para você acompanhar</Text>
       <ComingSoon title="Cotação do café" description="Preço do dia do arábica e do conilon." icon="cafe-outline" tone="earth" />
-      <ComingSoon title="Próximas atividades" description="O que fazer na sua área nas próximas semanas." icon="calendar-outline" />
       <ComingSoon title="Clima" description="Chuva e temperatura previstas para a sua propriedade." icon="partly-sunny-outline" />
+      <ComingSoon title="Próximas atividades" description="O que fazer na sua área nas próximas semanas." icon="calendar-outline" />
     </Screen>
   );
 }

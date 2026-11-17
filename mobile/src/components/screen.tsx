@@ -12,15 +12,20 @@ type ScreenProps = {
   title: string;
   eyebrow?: string;
   header?: ReactNode; // conteúdo extra dentro do cabeçalho verde (ex.: seletor de propriedade)
+  // Por padrão o primeiro cartão sobe por cima da borda do cabeçalho. Desligue quando o primeiro
+  // cartão também for verde, senão os dois se misturam.
+  overlap?: boolean;
   children: ReactNode;
 };
 
 // Cabeçalho verde com a árvore da Arvo ao fundo; o conteúdo sobe por cima da borda em cartões.
-export function Screen({ title, eyebrow, header, children }: ScreenProps) {
+export function Screen({ title, eyebrow, header, overlap = true, children }: ScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-      <View style={[styles.header, { paddingTop: insets.top + spacing.lg }]}>
+      <View
+        style={[styles.header, { paddingTop: insets.top + spacing.lg }, !overlap && styles.headerCompact]}
+      >
         <ArvoSymbol size={220} color={colors.cream} style={styles.watermark} />
         <View style={styles.inner}>
           {eyebrow && <Text style={styles.eyebrow}>{eyebrow}</Text>}
@@ -30,7 +35,7 @@ export function Screen({ title, eyebrow, header, children }: ScreenProps) {
           {header}
         </View>
       </View>
-      <View style={[styles.inner, styles.body]}>{children}</View>
+      <View style={[styles.inner, styles.body, !overlap && styles.bodySpaced]}>{children}</View>
     </ScrollView>
   );
 }
@@ -58,7 +63,7 @@ export function IconBubble({ name, tone = 'leaf' }: { name: IconName; tone?: 'le
   );
 }
 
-// Espaço reservado para o que ainda vai ser construído nas próximas entregas.
+// Espaço reservado para o que ainda vai ser construído: cartão no verde da Arvo com texto claro.
 export function ComingSoon({
   title,
   description,
@@ -71,14 +76,16 @@ export function ComingSoon({
   tone?: 'leaf' | 'earth';
 }) {
   return (
-    <View style={[styles.card, styles.soon]}>
-      <IconBubble name={icon} tone={tone} />
+    <View style={[styles.card, styles.soon, styles.brandCard]}>
+      <View style={[styles.bubble, styles.brandBubble]}>
+        <Ionicons name={icon} size={20} color={tone === 'earth' ? colors.sand : colors.cream} />
+      </View>
       <View style={styles.soonText}>
         <View style={styles.soonTitleRow}>
-          <Text style={styles.cardTitle}>{title}</Text>
-          <Text style={styles.badge}>Em breve</Text>
+          <Text style={[styles.cardTitle, styles.brandTitle]}>{title}</Text>
+          <Text style={[styles.badge, styles.brandBadge]}>Em breve</Text>
         </View>
-        <Text style={textStyles.muted}>{description}</Text>
+        <Text style={[textStyles.muted, styles.brandText]}>{description}</Text>
       </View>
     </View>
   );
@@ -118,11 +125,13 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: radius.lg,
     overflow: 'hidden',
   },
+  headerCompact: { paddingBottom: spacing.lg },
   watermark: { position: 'absolute', right: -60, top: -20, opacity: 0.08 },
   inner: { width: '100%', maxWidth: 640, alignSelf: 'center' },
   eyebrow: { fontFamily: fonts.medium, fontSize: font.label, color: colors.sand, marginBottom: 2 },
   title: { fontFamily: fonts.bold, fontSize: font.big, color: colors.cream },
   body: { paddingHorizontal: spacing.md, marginTop: -spacing.lg, gap: spacing.md },
+  bodySpaced: { marginTop: spacing.lg },
   card: {
     backgroundColor: colors.white,
     borderRadius: radius.md,
@@ -146,6 +155,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
+  brandCard: { backgroundColor: colors.forest },
+  brandBubble: { backgroundColor: 'rgba(244,241,229,0.14)' },
+  brandTitle: { color: colors.cream },
+  brandText: { color: 'rgba(244,241,229,0.85)' },
+  brandBadge: { backgroundColor: colors.sand, color: colors.forestDeep },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
