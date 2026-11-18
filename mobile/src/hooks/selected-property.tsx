@@ -16,7 +16,9 @@ export function SelectedPropertyProvider({ children }: { children: ReactNode }) 
   const { data } = useProfile();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const properties = data?.properties ?? [];
-  const property = properties.find((item) => item.id === selectedId) ?? properties[0] ?? null;
+  // Até o produtor escolher, mostra a primeira propriedade do cadastro.
+  const chosen = properties.find((item) => item.id === selectedId);
+  const property = chosen ?? properties[0] ?? null;
 
   return (
     <SelectedPropertyContext.Provider value={{ property, properties, select: setSelectedId }}>

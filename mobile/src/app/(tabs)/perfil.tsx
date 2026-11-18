@@ -9,25 +9,38 @@ import { useProfile } from '@/hooks/use-profile';
 import { colors, font, fonts, radius, spacing } from '@/theme';
 import { maskPhone } from '@/utils/phone';
 
-const initials = (name: string) =>
-  name
-    .split(' ')
-    .filter((part) => /^[A-Za-zÀ-ú]/.test(part))
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join('');
+// "Maria da Silva" → "MD": primeiras letras das duas primeiras palavras (ignora números e símbolos).
+function initials(fullName: string): string {
+  const words = fullName.split(' ').filter((word) => /^[A-Za-zÀ-ú]/.test(word));
+  const firstTwo = words.slice(0, 2);
+  const letters = firstTwo.map((word) => word[0].toUpperCase());
+  return letters.join('');
+}
 
 export default function ProfileScreen() {
   const { data: profile } = useProfile();
-  const { signOut } = useAuth();
+  const { token, signOut } = useAuth();
 
   async function handleSignOut() {
     await signOut();
-    router.replace('/login');
+    router.replace('/inicio');
   }
 
   return (
     <Screen eyebrow="Minha conta" title="Perfil">
+      {!token && (
+        <Card title="Você ainda não entrou" icon="person-circle-outline">
+          <Text style={textStyles.body}>Entre na sua conta para ver seus dados e os da sua propriedade.</Text>
+          <Pressable
+            onPress={() => router.navigate('/propriedade')}
+            style={({ pressed }) => [styles.signIn, pressed && { backgroundColor: colors.forestDark }]}
+            accessibilityRole="button"
+          >
+            <Text style={styles.signInText}>Entrar na minha conta</Text>
+            <Ionicons name="arrow-forward" size={20} color={colors.cream} />
+          </Pressable>
+        </Card>
+      )}
       {profile && (
         <Card>
           <View style={styles.identity}>
@@ -43,14 +56,16 @@ export default function ProfileScreen() {
       )}
       <ComingSoon title="Avisos" description="Comunicados da Arvo sobre o seu projeto." icon="notifications-outline" />
 
-      <Pressable
-        onPress={handleSignOut}
-        style={({ pressed }) => [styles.signOut, pressed && { backgroundColor: colors.dangerSoft }]}
-        accessibilityRole="button"
-      >
-        <Ionicons name="log-out-outline" size={20} color={colors.danger} />
-        <Text style={styles.signOutText}>Sair do app</Text>
-      </Pressable>
+      {!!token && (
+        <Pressable
+          onPress={handleSignOut}
+          style={({ pressed }) => [styles.signOut, pressed && { backgroundColor: colors.dangerSoft }]}
+          accessibilityRole="button"
+        >
+          <Ionicons name="log-out-outline" size={20} color={colors.danger} />
+          <Text style={styles.signOutText}>Sair da conta</Text>
+        </Pressable>
+      )}
 
       <View style={styles.footer}>
         <ArvoWordmark size={72} color={colors.olive} />
@@ -73,6 +88,17 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: fonts.bold, fontSize: 22, color: colors.cream },
   name: { fontFamily: fonts.bold, fontSize: font.title - 2, color: colors.text, textAlign: 'center' },
   note: { marginTop: spacing.xs },
+  signIn: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.forest,
+    borderRadius: radius.md,
+    minHeight: 52,
+    marginTop: spacing.xs,
+  },
+  signInText: { fontFamily: fonts.bold, fontSize: font.body, color: colors.cream },
   signOut: {
     flexDirection: 'row',
     gap: spacing.sm,

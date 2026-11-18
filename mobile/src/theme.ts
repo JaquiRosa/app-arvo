@@ -6,6 +6,9 @@ export const colors = {
   forestDark: '#2a3d28',
   forestDeep: '#1e2e1c',
   leaf: '#1c8e36',
+  leafDark: '#157029', // botão verde-vivo pressionado
+  orange: '#ff7513', // destaque da chamada "Entrar na minha conta" no Início
+  orangeDark: '#e05f05', // botão laranja pressionado
   leafSoft: '#e4efe1',
   olive: '#586c32',
   earth: '#7a4522',
