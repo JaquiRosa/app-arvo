@@ -1,137 +1,122 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import type { ProducerProject } from '@/api/producer-app';
-import { PropertyPicker } from '@/components/property-picker';
-import { Card, ComingSoon, Screen, textStyles } from '@/components/screen';
-import { StageProgress } from '@/components/stage-progress';
-import { useSelectedProperty } from '@/hooks/selected-property';
+import { useAuth } from '@/auth/auth-context';
+import { ComingSoon, type IconName, Screen, textStyles } from '@/components/screen';
+import { SignInInvite } from '@/components/sign-in-invite';
 import { useProfile } from '@/hooks/use-profile';
-import { colors, font, fonts, radius, spacing } from '@/theme';
+import { colors, font, fonts, radius, shadow, spacing } from '@/theme';
+import { firstName } from '@/utils/name';
 
-const STATUS: Record<ProducerProject['status'], { label: string; color: string; background: string }> = {
-  executing: { label: 'Em andamento', color: colors.leaf, background: colors.leafSoft },
-  canceled: { label: 'Cancelado', color: colors.danger, background: colors.dangerSoft },
-  archived: { label: 'Encerrado', color: colors.earth, background: colors.earthSoft },
-};
+// Notícias de modelo só para ver o visual. Depois vêm do MVGI, publicadas pelos admins.
+type News = { id: string; category: string; title: string; date: string; icon: IconName; tone: 'leaf' | 'earth' };
 
-const firstName = (name: string) => name.split(' ')[0];
+const SAMPLE_NEWS: News[] = [
+  {
+    id: '1',
+    category: 'Reflorestar',
+    title: 'Novas turmas de produtores começam o plantio na região serrana',
+    date: '18 nov 2026',
+    icon: 'leaf',
+    tone: 'leaf',
+  },
+  {
+    id: '2',
+    category: 'Café',
+    title: 'Arábica sobe pela terceira semana seguida com chuva abaixo da média',
+    date: '16 nov 2026',
+    icon: 'cafe',
+    tone: 'earth',
+  },
+  {
+    id: '3',
+    category: 'Eventos',
+    title: 'Dia de campo sobre manejo de sistemas agroflorestais acontece em dezembro',
+    date: '12 nov 2026',
+    icon: 'people',
+    tone: 'leaf',
+  },
+];
 
-const greeting = () => {
+function greetingForNow(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Bom dia';
-  if (hour < 18) return 'Boa tarde';
+  if (hour < 12) {
+    return 'Bom dia';
+  }
+  if (hour < 18) {
+    return 'Boa tarde';
+  }
   return 'Boa noite';
-};
+}
 
+// Tela aberta: qualquer pessoa vê, com ou sem login.
+// Sem login: chamada para entrar no topo. Com login: a saudação usa o nome do produtor.
 export default function HomeScreen() {
-  const { data: profile, isLoading, error, refetch } = useProfile();
-  const { property } = useSelectedProperty();
+  const { token } = useAuth();
+  const { data: profile } = useProfile();
+  const signedIn = !!token;
 
-  if (isLoading || error || !profile) {
-    return (
-      <Screen title="Início">
-        <Card>
-          {isLoading ? (
-            <ActivityIndicator color={colors.forest} size="large" />
-          ) : (
-            <>
-              <Text style={textStyles.body}>{error?.message ?? 'Não foi possível carregar seus dados.'}</Text>
-              <Pressable onPress={() => refetch()} accessibilityRole="button">
-                <Text style={styles.link}>Tentar de novo</Text>
-              </Pressable>
-            </>
-          )}
-        </Card>
-      </Screen>
-    );
+  let eyebrow = `${greetingForNow()}!`;
+  let title = 'Portal do Produtor';
+  if (profile) {
+    eyebrow = `${greetingForNow()},`;
+    title = firstName(profile.name);
   }
 
-  const location = property
-    ? [property.community, property.city && `${property.city}/${property.state ?? 'ES'}`].filter(Boolean).join(' · ')
-    : '';
-
+  // A chamada é um cartão branco, então pode subir por cima do cabeçalho verde.
+  // Sem ela, o primeiro item é um título de seção, que precisa ficar abaixo do cabeçalho.
   return (
-    <Screen eyebrow={`${greeting()},`} title={firstName(profile.name)} header={<PropertyPicker />}>
-      {property ? (
-        <>
-          <View style={styles.propertyCard}>
-            <View style={styles.propertyIcon}>
-              <Ionicons name="home" size={22} color={colors.cream} />
-            </View>
-            <View style={styles.flex}>
-              <Text style={styles.propertyName}>{property.name}</Text>
-              {!!location && <Text style={textStyles.muted}>{location}</Text>}
-            </View>
-          </View>
+    <Screen eyebrow={eyebrow} title={title} overlap={!signedIn}>
+      {!signedIn && <SignInInvite />}
 
-          {property.projects.map((project) => {
-            const status = STATUS[project.status];
-            return (
-              <Card key={project.id}>
-                <View style={styles.projectHeader}>
-                  <View style={styles.flex}>
-                    <Text style={textStyles.section}>{project.program}</Text>
-                    <Text style={styles.contract}>Contrato nº {project.contractNumber}</Text>
-                  </View>
-                  <Text style={[styles.status, { color: status.color, backgroundColor: status.background }]}>
-                    {status.label}
-                  </Text>
-                </View>
-                <StageProgress currentOrder={project.stage?.order ?? null} />
-              </Card>
-            );
-          })}
-        </>
-      ) : (
-        <Card title="Nenhum projeto encontrado" icon="information-circle-outline">
-          <Text style={textStyles.body}>
-            Não achamos projeto do Reflorestar no seu cadastro. Fale com a Arvo se isso estiver errado.
-          </Text>
-        </Card>
-      )}
-
-      <Text style={textStyles.section}>Para você acompanhar</Text>
+      <Text style={[textStyles.section, signedIn && styles.firstSection]}>Para você acompanhar</Text>
       <ComingSoon title="Cotação do café" description="Preço do dia do arábica e do conilon." icon="cafe-outline" tone="earth" />
-      <ComingSoon title="Clima" description="Chuva e temperatura previstas para a sua propriedade." icon="partly-sunny-outline" />
-      <ComingSoon title="Próximas atividades" description="O que fazer na sua área nas próximas semanas." icon="calendar-outline" />
+      <ComingSoon title="Clima" description="Chuva e temperatura previstas para a sua região." icon="partly-sunny-outline" />
+
+      <Text style={textStyles.section}>Notícias</Text>
+      {SAMPLE_NEWS.map((news) => (
+        <NewsCard key={news.id} news={news} />
+      ))}
     </Screen>
   );
 }
 
+const NEWS_TONES = {
+  leaf: { image: colors.olive, category: colors.leaf },
+  earth: { image: colors.earth, category: colors.earth },
+};
+
+function NewsCard({ news }: { news: News }) {
+  const tone = NEWS_TONES[news.tone];
+  return (
+    <View style={styles.news}>
+      <View style={[styles.newsImage, { backgroundColor: tone.image }]}>
+        <Ionicons name={news.icon} size={30} color={colors.cream} />
+      </View>
+      <View style={styles.newsText}>
+        <Text style={[styles.newsCategory, { color: tone.category }]}>{news.category}</Text>
+        <Text style={styles.newsTitle} numberOfLines={3}>
+          {news.title}
+        </Text>
+        <Text style={styles.newsDate}>{news.date}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  link: { fontFamily: fonts.bold, color: colors.forest, fontSize: font.body },
-  propertyCard: {
+  firstSection: { marginTop: 0 },
+  news: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm + 4,
     backgroundColor: colors.white,
     borderRadius: radius.md,
-    padding: spacing.md,
-    shadowColor: '#1e2e1c',
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
-  },
-  propertyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: colors.olive,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  propertyName: { fontFamily: fonts.bold, fontSize: font.body + 1, color: colors.text },
-  projectHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  contract: { fontFamily: fonts.bold, fontSize: font.title, color: colors.text, marginTop: 2 },
-  status: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
     overflow: 'hidden',
+    minHeight: 112,
+    ...shadow,
   },
+  newsImage: { width: 96, alignItems: 'center', justifyContent: 'center' },
+  newsText: { flex: 1, padding: spacing.md, gap: 4 },
+  newsCategory: { fontFamily: fonts.semibold, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 },
+  newsTitle: { fontFamily: fonts.bold, fontSize: font.body, color: colors.text, lineHeight: 21 },
+  newsDate: { fontFamily: fonts.regular, fontSize: font.small, color: colors.muted, marginTop: 'auto' },
 });

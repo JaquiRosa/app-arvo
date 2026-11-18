@@ -15,22 +15,28 @@ const NETWORK_ERROR = 'Sem conexão com a Arvo. Verifique a internet e tente de 
 type RequestOptions = { method?: 'GET' | 'POST'; body?: unknown; token?: string | null };
 
 export async function apiRequest<T>(path: string, { method = 'GET', body, token }: RequestOptions = {}): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  let requestBody: string | undefined;
+  if (body !== undefined) {
+    requestBody = JSON.stringify(body);
+  }
+
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    response = await fetch(`${API_URL}${path}`, { method, headers, body: requestBody });
   } catch {
+    // fetch só falha assim quando não chega no servidor (sem internet, backend fora do ar).
     throw new ApiError(0, NETWORK_ERROR);
   }
 
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw new ApiError(response.status, errorMessage(data));
+  if (!response.ok) {
+    throw new ApiError(response.status, errorMessage(data));
+  }
   return data as T;
 }
 

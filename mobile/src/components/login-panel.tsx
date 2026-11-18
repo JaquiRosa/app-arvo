@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -25,8 +24,10 @@ import { isCompletePhone, maskPhone } from '@/utils/phone';
 const ARVO_WHATSAPP = 'https://wa.me/5527000000000';
 const MIN_PASSWORD = 4;
 
-export default function LoginScreen() {
-  const { token, signIn } = useAuth();
+// Aparece na aba Propriedade enquanto o produtor não entrou. Depois do login a própria aba
+// troca para os dados da propriedade (o token muda no AuthProvider).
+export function LoginPanel() {
+  const { signIn } = useAuth();
   const insets = useSafeAreaInsets();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -34,8 +35,6 @@ export default function LoginScreen() {
   const [focused, setFocused] = useState<'phone' | 'password' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-
-  if (token) return <Redirect href="/inicio" />;
 
   const canSubmit = isCompletePhone(phone) && password.length >= MIN_PASSWORD && !sending;
 
@@ -45,10 +44,8 @@ export default function LoginScreen() {
     setSending(true);
     try {
       await signIn(phone, password);
-      router.replace('/inicio');
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Não foi possível entrar. Tente de novo.');
-    } finally {
       setSending(false);
     }
   }
@@ -63,10 +60,14 @@ export default function LoginScreen() {
           <Text style={styles.tagline}>Portal do Produtor</Text>
         </View>
 
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
+        <View style={styles.sheet}>
           <View style={styles.form}>
-            <Text style={styles.title}>Entrar</Text>
-            <Text style={styles.subtitle}>Use o telefone cadastrado no seu projeto com a Arvo.</Text>
+            <Text style={styles.title} accessibilityRole="header">
+              Acesse sua propriedade
+            </Text>
+            <Text style={styles.subtitle}>
+              Entre na sua conta para ver áreas, localização e dados do seu projeto.
+            </Text>
 
             <Text style={styles.label}>Telefone com DDD</Text>
             <View style={[styles.field, focused === 'phone' && styles.fieldFocused]}>
@@ -136,14 +137,19 @@ export default function LoginScreen() {
               accessibilityRole="button"
             >
               {sending ? (
-                <ActivityIndicator color={colors.cream} />
+                <ActivityIndicator color={colors.white} />
               ) : (
                 <>
                   <Text style={styles.buttonText}>Entrar</Text>
-                  <Ionicons name="arrow-forward" size={20} color={colors.cream} />
+                  <Ionicons name="arrow-forward" size={20} color={colors.white} />
                 </>
               )}
             </Pressable>
+
+            <View style={styles.secure}>
+              <Ionicons name="lock-closed-outline" size={18} color={colors.forest} />
+              <Text style={styles.secureText}>Seus dados ficam protegidos</Text>
+            </View>
 
             <Pressable onPress={() => Linking.openURL(ARVO_WHATSAPP)} style={styles.help} accessibilityRole="link">
               <Ionicons name="logo-whatsapp" size={22} color={colors.leaf} />
@@ -180,9 +186,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 32,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
   },
   form: { width: '100%', maxWidth: 440, alignSelf: 'center' },
-  title: { fontFamily: fonts.bold, fontSize: font.big, color: colors.text },
+  title: { fontFamily: fonts.bold, fontSize: font.big - 2, color: colors.text },
   subtitle: { fontFamily: fonts.regular, fontSize: font.label, color: colors.muted, marginTop: spacing.xs, lineHeight: 21 },
   label: { fontFamily: fonts.semibold, fontSize: font.small, color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm },
   field: {
@@ -211,7 +218,7 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     gap: spacing.sm,
-    backgroundColor: colors.forest,
+    backgroundColor: colors.leaf,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -219,8 +226,16 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   buttonDisabled: { opacity: 0.4 },
-  buttonPressed: { backgroundColor: colors.forestDark },
-  buttonText: { fontFamily: fonts.bold, fontSize: font.body + 1, color: colors.cream },
+  buttonPressed: { backgroundColor: colors.leafDark },
+  buttonText: { fontFamily: fonts.bold, fontSize: font.body + 1, color: colors.white },
+  secure: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  secureText: { fontFamily: fonts.regular, fontSize: font.small, color: colors.muted },
   help: {
     flexDirection: 'row',
     alignItems: 'center',

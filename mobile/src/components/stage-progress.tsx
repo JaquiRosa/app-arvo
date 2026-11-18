@@ -7,11 +7,26 @@ import { colors, fonts, spacing } from '@/theme';
 // As três etapas do Reflorestar, na ordem do cadastro (stage.order).
 const STAGES = ['Elaboração', 'Implantação', 'Monitoramento'];
 
+// Etapa atual entre 1 e 3; 0 quando o projeto ainda não tem etapa cadastrada.
+function currentStep(stageOrder: number | null): number {
+  if (!stageOrder) {
+    return 0;
+  }
+  if (stageOrder < 1) {
+    return 1;
+  }
+  if (stageOrder > STAGES.length) {
+    return STAGES.length;
+  }
+  return stageOrder;
+}
+
 export function StageProgress({ currentOrder }: { currentOrder: number | null }) {
-  const current = currentOrder ? Math.min(Math.max(currentOrder, 1), STAGES.length) : 0;
+  const current = currentStep(currentOrder);
+  const currentName = STAGES[current - 1] ?? 'não informada';
 
   return (
-    <View style={styles.wrap} accessibilityLabel={`Etapa ${current} de ${STAGES.length}: ${STAGES[current - 1] ?? 'não informada'}`}>
+    <View style={styles.wrap} accessibilityLabel={`Etapa ${current} de ${STAGES.length}: ${currentName}`}>
       <View style={styles.track}>
         {STAGES.map((name, index) => {
           const step = index + 1;
